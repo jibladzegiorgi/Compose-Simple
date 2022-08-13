@@ -1,8 +1,5 @@
-package com.example.compose
+package com.example.compose.basic_code_lab
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -27,39 +24,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
-import com.example.compose.screen.OnboardingScreen
 import com.example.compose.ui.theme.ComposeTheme
 
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            ComposeTheme {
-                // A surface container using the 'background' color from the theme
-                Column(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    MyApp()
-                }
-            }
-        }
-    }
-}
-
 @Composable
-fun MyApp() {
-    var showOnboarding by rememberSaveable { mutableStateOf(true) }
-    if (showOnboarding) {
-        OnboardingScreen(onClick = {
-            showOnboarding = false
-        })
-    } else {
-        Greeting()
-    }
-}
-
-@Composable
-fun Greeting(nameList: List<String> = List(1000) { "$it" }) {
+fun GreetingScreen(nameList: List<String> = List(1000) { "$it" }) {
     LazyColumn(modifier = Modifier.padding(vertical = 5.dp)) {
         items(items = nameList) { name ->
             Surface(
@@ -117,12 +85,12 @@ fun Greeting(nameList: List<String> = List(1000) { "$it" }) {
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun DefaultPreview() {
+fun GreetingPreview() {
     ComposeTheme {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            Greeting()
+            GreetingScreen()
         }
     }
 }
