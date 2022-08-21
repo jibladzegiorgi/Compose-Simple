@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.compose.ui.theme.ComposeTheme
+import com.example.compose.ui.theme.MyAppTheme
 
 @Composable
 fun OnboardingScreen(onClick: () -> Unit) {
@@ -33,7 +33,7 @@ fun OnboardingScreen(onClick: () -> Unit) {
 @Preview(showBackground = true, widthDp = 320, heightDp = 320)
 @Composable
 fun OnboardingPreview() {
-    ComposeTheme {
+    MyAppTheme {
         OnboardingScreen(onClick = {})
     }
 }

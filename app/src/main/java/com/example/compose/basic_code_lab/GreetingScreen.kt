@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
-import com.example.compose.ui.theme.ComposeTheme
+import com.example.compose.ui.theme.MyAppTheme
 
 @Composable
 fun GreetingScreen(nameList: List<String> = List(1000) { "$it" }) {
@@ -86,7 +86,7 @@ fun GreetingScreen(nameList: List<String> = List(1000) { "$it" }) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun GreetingPreview() {
-    ComposeTheme {
+    MyAppTheme {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
