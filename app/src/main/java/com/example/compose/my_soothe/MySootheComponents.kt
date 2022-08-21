@@ -1,6 +1,11 @@
 package com.example.compose.my_soothe
 
-import androidx.compose.foundation.Image
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.*
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -8,21 +13,25 @@ import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Spa
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Green
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.compose.R
-import com.example.compose.ui.theme.ComposeTheme
+import com.example.compose.ui.theme.MyAppTheme
+import com.example.compose.ui.theme.Purple700
 
 @Composable
 fun SearchBar(modifier: Modifier = Modifier) {
@@ -48,9 +57,9 @@ fun SearchBar(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun AlignYourBodyElement(modifier: Modifier = Modifier) {
+private fun AlignYourBodyElement(modifier: Modifier = Modifier, onItemClick: () -> Unit) {
     Column(
-        modifier = modifier,
+        modifier = modifier.clickable(onClick = onItemClick),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
@@ -71,14 +80,16 @@ private fun AlignYourBodyElement(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun AlignYourBodyRow(modifier: Modifier = Modifier) {
+fun AlignYourBodyRow(modifier: Modifier = Modifier, onItemClick: () -> Unit) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(horizontal = 16.dp),
         modifier = modifier
     ) {
         items(List(20) { "$it" }) {
-            AlignYourBodyElement()
+            AlignYourBodyElement {
+                onItemClick()
+            }
         }
     }
 }
@@ -117,8 +128,15 @@ fun FavoriteCollectionGrid(modifier: Modifier = Modifier) {
     }
 }
 
+enum class BottomPage {
+    Home, Profile, Animation
+}
+
 @Composable
-fun SootheBottomNavigation(modifier: Modifier = Modifier) {
+fun SootheBottomNavigation(
+    modifier: Modifier = Modifier,
+    onTabSelected: (bottomPage: BottomPage) -> Unit
+) {
     BottomNavigation(
         backgroundColor = MaterialTheme.colors.background,
         modifier = modifier
@@ -134,7 +152,20 @@ fun SootheBottomNavigation(modifier: Modifier = Modifier) {
                 Text("Home")
             },
             selected = true,
-            onClick = { })
+            onClick = { onTabSelected(BottomPage.Home) })
+        BottomNavigationItem(
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.AccountBalance,
+                    contentDescription = null
+                )
+            },
+            label = {
+                Text("Animation")
+            },
+            selected = false,
+            onClick = { onTabSelected(BottomPage.Animation) }
+        )
         BottomNavigationItem(
             icon = {
                 Icon(
@@ -146,17 +177,230 @@ fun SootheBottomNavigation(modifier: Modifier = Modifier) {
                 Text("Profile")
             },
             selected = false,
-            onClick = {}
+            onClick = { onTabSelected(BottomPage.Profile) }
         )
+    }
+}
+
+enum class TabPage {
+    Home, Work
+}
+
+@Composable
+fun TabRow(
+    tabPage: TabPage = TabPage.Home,
+    onTabSelected: (tabPage: TabPage) -> Unit
+) {
+    TabRow(
+        selectedTabIndex = tabPage.ordinal,
+        indicator = { tabPositions ->
+            HomeTabIndicator(tabPositions, tabPage)
+        }
+    ) {
+        Tab(
+            icon = Icons.Default.Home,
+            title = "Home",
+            onClick = { onTabSelected(TabPage.Home) }
+        )
+        Tab(
+            icon = Icons.Default.AccountBox,
+            title = "Work",
+            onClick = { onTabSelected(TabPage.Work) }
+        )
+    }
+}
+
+@Composable
+private fun HomeTabIndicator(
+    tabPositions: List<TabPosition>,
+    tabPage: TabPage
+) {
+    val transition = updateTransition(tabPage, label = "Tab indicator")
+    val indicatorLeft by transition.animateDp(
+        transitionSpec = {
+            if (TabPage.Home isTransitioningTo TabPage.Work) {
+                // Indicator moves to the right.
+                // The left edge moves slower than the right edge.
+                spring(stiffness = Spring.StiffnessVeryLow)
+            } else {
+                // Indicator moves to the left.
+                // The left edge moves faster than the right edge.
+                spring(stiffness = Spring.StiffnessMedium)
+            }
+        },
+        label = "Indicator left"
+    ) { page ->
+        tabPositions[page.ordinal].left
+    }
+    val indicatorRight by transition.animateDp(transitionSpec = {
+        if (TabPage.Home isTransitioningTo TabPage.Work) {
+            // Indicator moves to the right
+            // The right edge moves faster than the left edge.
+            spring(stiffness = Spring.StiffnessMedium)
+        } else {
+            // Indicator moves to the left.
+            // The right edge moves slower than the left edge.
+            spring(stiffness = Spring.StiffnessVeryLow)
+        }
+    }, label = "Indicator right") { page ->
+        tabPositions[page.ordinal].right
+    }
+    val color by transition.animateColor(label = "Border color") { page ->
+        if (page == TabPage.Home) Purple700 else Green
+    }
+    Box(
+        Modifier
+            .fillMaxSize()
+            .wrapContentSize(align = Alignment.BottomStart)
+            .offset(x = indicatorLeft)
+            .width(indicatorRight - indicatorLeft)
+            .padding(4.dp)
+            .fillMaxSize()
+            .border(
+                BorderStroke(2.dp, color),
+                RoundedCornerShape(4.dp)
+            )
+    )
+}
+
+@Composable
+private fun Tab(
+    modifier: Modifier = Modifier,
+    icon: ImageVector = Icons.Default.Home,
+    title: String = "Home",
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(text = title)
+    }
+}
+
+@Composable
+fun NotSupportFeature(show: Boolean) {
+    AnimatedVisibility(
+        visible = show,
+        enter = slideInVertically(
+            initialOffsetY = { fullHeight -> -fullHeight },
+            animationSpec = tween(durationMillis = 150, easing = LinearOutSlowInEasing)
+        ),
+        exit = slideOutVertically(
+            targetOffsetY = { fullHeight -> -fullHeight },
+            animationSpec = tween(durationMillis = 250, easing = FastOutLinearInEasing)
+        )
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colors.secondary,
+            elevation = 4.dp
+        ) {
+            Text(
+                text = "Not support this feature",
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun Weather(onRefresh: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = 2.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .heightIn(min = 64.dp)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = painterResource(R.drawable.sun),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+            )
+            Text(
+                text = "18 C", modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 10.dp)
+            )
+            IconButton(onClick = onRefresh) {
+                Icon(imageVector = Icons.Default.Refresh, contentDescription = null)
+            }
+        }
+    }
+}
+
+@Composable
+fun LoadingWeather() {
+    val infiniteTransition = rememberInfiniteTransition()
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 1000
+                0.7f at 500
+            },
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+
+    Row(
+        modifier = Modifier
+            .heightIn(min = 64.dp)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(Color.LightGray.copy(alpha = alpha))
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.LightGray.copy(alpha = alpha))
+        ) {
+            Text(
+                text = ""
+            )
+        }
     }
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFFF0EAE2)
 @Composable
 fun SootheBottomNavigationPreview() {
-    ComposeTheme {
+    MyAppTheme {
         Column {
-            SootheBottomNavigation()
+            SootheBottomNavigation {}
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFF0EAE2)
+@Composable
+fun WeatherPreview() {
+    MyAppTheme {
+        Column {
+            Weather {}
+            LoadingWeather()
         }
     }
 }
@@ -164,7 +408,7 @@ fun SootheBottomNavigationPreview() {
 @Preview(showBackground = true, backgroundColor = 0xFFF0EAE2)
 @Composable
 fun Preview() {
-    ComposeTheme {
+    MyAppTheme {
         Column {
             FavoriteCollectionGrid(modifier = Modifier.padding(8.dp))
         }
@@ -174,9 +418,19 @@ fun Preview() {
 @Preview(showBackground = true, backgroundColor = 0xFFF0EAE2)
 @Composable
 fun CardPreview() {
-    ComposeTheme {
+    MyAppTheme {
         Column {
-            AlignYourBodyRow(modifier = Modifier.padding(8.dp))
+            AlignYourBodyRow(modifier = Modifier.padding(8.dp)) {}
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFF0EAE2)
+@Composable
+fun CardTabPrewiew() {
+    MyAppTheme {
+        Column {
+            TabRow {}
         }
     }
 }
